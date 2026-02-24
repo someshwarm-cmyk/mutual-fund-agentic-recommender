@@ -184,6 +184,7 @@ Deployment on Streamlit Cloud
 
 ## 👨‍💻 Author
 
-Somesh M
+Someshwar M
 Data Analytics
+
 
