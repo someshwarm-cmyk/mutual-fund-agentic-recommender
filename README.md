@@ -158,7 +158,7 @@ cd mutual-fund-agentic-recommender
 pip install -r requirements.txt
 streamlit run app.py``
 
-##🎯 Use Cases
+## 🎯 Use Cases
 
 Retail Investors
 
@@ -168,7 +168,7 @@ FinTech Learning Projects
 
 Portfolio Analytics Demonstration
 
-##📌 Future Improvements
+## 📌 Future Improvements
 
 Rolling 1Y CAGR
 
@@ -182,7 +182,8 @@ AI-based allocation suggestions
 
 Deployment on Streamlit Cloud
 
-##👨‍💻 Author
+## 👨‍💻 Author
 
 Somesh M
 Data Analytics
+
