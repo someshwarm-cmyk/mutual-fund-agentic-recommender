@@ -9,6 +9,9 @@ Built using:
 - NumPy
 
 ---
+## App Link
+https://mutual-fund-agentic-recommender-fworcfkbufumocjxvq5jxm.streamlit.app/
+
 
 ## 🚀 Live Features
 
@@ -186,5 +189,6 @@ Deployment on Streamlit Cloud
 
 Someshwar M
 Data Analytics
+
 
 
