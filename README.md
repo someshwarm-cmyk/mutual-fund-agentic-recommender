@@ -10,8 +10,7 @@ Built using:
 
 ---
 ## App Link
-https://mutual-fund-agentic-recommender-fworcfkbufumocjxvq5jxm.streamlit.app/
-
+https://mutual-fund-agentic-recommender.streamlit.app/
 
 ## 🚀 Live Features
 
