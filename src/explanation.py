@@ -1,12 +1,28 @@
-def generate_explanation(profile):
+def generate_explanation(row, risk, horizon, investment_type, fund_type):
 
-    if profile == "Conservative":
-        return "Low risk preference. Focus on stability and consistent returns."
+    fund_name = row["Scheme Name"]
 
-    elif profile == "Normal":
-        return "Balanced risk-return preference. Moderate growth with stability."
+    ret_1y = row.get("1Y Return (%)", "N/A")
+    ret_3y = row.get("3Y Return (%)", "N/A")
+    sharpe = row.get("Sharpe Ratio", "N/A")
+    vol = row.get("Volatility", "N/A")
 
-    elif profile == "Aggressive":
-        return "High risk tolerance. Focus on growth potential."
+    explanation = f"""
+{fund_name} is recommended because:
 
-    return "Standard investment profile."
+• It matches your **{risk} risk appetite**.
+• Suitable for a **{horizon} investment horizon**.
+• Aligns with your **{fund_type} fund preference**.
+
+Performance indicators:
+
+• 1 Year Return: {ret_1y}%
+• 3 Year Return: {ret_3y}%
+• Sharpe Ratio: {sharpe}
+• Volatility: {vol}
+
+Higher Sharpe ratio indicates better risk-adjusted performance,
+making this fund suitable for your investment strategy.
+"""
+
+    return explanation

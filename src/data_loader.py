@@ -1,81 +1,38 @@
-import requests
 import pandas as pd
-
-AMFI_URL = "https://www.amfiindia.com/spages/NAVAll.txt"
+import requests
+from io import StringIO
 
 
 def fetch_amfi_data():
+
+    url = "https://www.amfiindia.com/spages/NAVAll.txt"
+
     try:
-        response = requests.get(AMFI_URL, timeout=10)
+        response = requests.get(url)
+        response.raise_for_status()
 
-        if response.status_code != 200:
-            return None
+        data = response.text
 
-        return parse_nav_text(response.text)
+        df = pd.read_csv(
+            StringIO(data),
+            sep=";",
+            header=None,
+            names=[
+                "Scheme Code",
+                "ISIN Div Payout",
+                "ISIN Div Reinvestment",
+                "Scheme Name",
+                "NAV",
+                "Date",
+            ],
+        )
 
-    except Exception:
+        df = df[df["Scheme Code"].notna()]
+
+        df["NAV"] = pd.to_numeric(df["NAV"], errors="coerce")
+
+        return df
+
+    except Exception as e:
+        print("Error fetching AMFI data:", e)
         return None
-
-
-def parse_nav_text(text):
-
-    lines = text.splitlines()
-
-    data = []
-    current_category = "Other"
-
-    for line in lines:
-
-        # Detect Category Sections
-        if "Open Ended Schemes" in line:
-            lower = line.lower()
-
-            if "equity" in lower:
-                current_category = "Equity"
-            elif "debt" in lower:
-                current_category = "Debt"
-            elif "gold" in lower:
-                current_category = "Gold"
-            elif "hybrid" in lower:
-                current_category = "Hybrid"
-            else:
-                current_category = "Other"
-
-            continue
-
-        # Parse Scheme Rows
-        if ";" in line:
-            parts = line.split(";")
-
-            if len(parts) >= 6:
-                try:
-                    scheme_code = parts[0].strip()
-                    scheme_name = parts[3].strip()  # ✅ CORRECT INDEX
-                    nav = float(parts[4].strip())
-                    date = parts[5].strip()
-
-                    data.append([
-                        scheme_code,
-                        scheme_name,
-                        nav,
-                        date,
-                        current_category
-                    ])
-
-                except:
-                    continue
-
-    df = pd.DataFrame(data, columns=[
-        "Scheme Code",
-        "Scheme Name",
-        "NAV",
-        "Date",
-        "Category"
-    ])
-
-    return df
-
-
-def parse_uploaded_file(uploaded_file):
-    text = uploaded_file.read().decode("utf-8")
-    return parse_nav_text(text)

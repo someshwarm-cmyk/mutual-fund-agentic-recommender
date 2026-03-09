@@ -1,38 +1,55 @@
 import pandas as pd
-import numpy as np
 
-def calculate_sip_growth(monthly_investment, years, annual_return):
+
+def calculate_sip_growth(sip_amount, years, annual_return):
 
     months = years * 12
     monthly_rate = annual_return / 12
 
-    if monthly_rate == 0:
-        return monthly_investment * months
+    value = 0
 
-    future_value = monthly_investment * (
-        ((1 + monthly_rate) ** months - 1) / monthly_rate
-    ) * (1 + monthly_rate)
+    for i in range(months):
+        value = (value + sip_amount) * (1 + monthly_rate)
 
-    return round(future_value, 2)
+    return value
 
 
-def generate_sip_table(monthly_investment, years, annual_return):
+def generate_sip_table(sip_amount, years, annual_return):
 
-    data = []
-    total_invested = 0
-    current_value = 0
-
+    months = years * 12
     monthly_rate = annual_return / 12
 
-    for month in range(1, years * 12 + 1):
+    value = 0
+    data = []
 
-        total_invested += monthly_investment
-        current_value = (current_value + monthly_investment) * (1 + monthly_rate)
+    for m in range(1, months + 1):
+
+        value = (value + sip_amount) * (1 + monthly_rate)
 
         data.append({
-            "Month": month,
-            "Total Invested": total_invested,
-            "Portfolio Value": round(current_value, 2)
+            "Month": m,
+            "Portfolio Value": value
         })
 
     return pd.DataFrame(data)
+
+
+def calculate_swp_growth(initial_corpus, withdrawal, years, annual_return):
+
+    months = years * 12
+    monthly_rate = annual_return / 12
+
+    corpus = initial_corpus
+    balances = []
+
+    for m in range(months):
+
+        corpus = corpus * (1 + monthly_rate)
+        corpus -= withdrawal
+
+        if corpus < 0:
+            corpus = 0
+
+        balances.append(corpus)
+
+    return corpus, balances
