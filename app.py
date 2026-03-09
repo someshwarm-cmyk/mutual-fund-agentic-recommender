@@ -4,65 +4,86 @@ import pandas as pd
 from src.data_loader import fetch_amfi_data
 from src.data_processing import compute_metrics
 from src.recommender import recommend_funds
-from src.historical_storage import update_nav_history
+from src.explanation import generate_explanation
 
-# =========================
-# PAGE CONFIG (FIRST ALWAYS)
-# =========================
+from src.sip_simulator import (
+    calculate_sip_growth,
+    generate_sip_table,
+    calculate_swp_growth,
+)
+
+from src.document_engine import (
+    extract_amc,
+    get_amc_document_link,
+    get_scheme_document_search_link,
+    get_amfi_scheme_link,
+)
+
+# -------------------------------------------------
+# Page Config
+# -------------------------------------------------
 
 st.set_page_config(
-    page_title="Agentic Mutual Fund Recommender",
+    page_title="AI Mutual Fund Advisor",
     layout="wide"
 )
 
-# =========================
-# FETCH NAV DATA (ONLY ONCE)
-# =========================
+st.title("🤖 AI Mutual Fund Advisory Platform")
+
+# -------------------------------------------------
+# SIDEBAR - INVESTOR PROFILE
+# -------------------------------------------------
+
+st.sidebar.title("Investor Profile")
+
+risk = st.sidebar.selectbox(
+    "Risk Appetite",
+    ["low", "medium", "high"]
+)
+
+horizon = st.sidebar.selectbox(
+    "Investment Horizon",
+    ["short", "medium", "long"]
+)
+
+investment_type = st.sidebar.selectbox(
+    "Investment Type",
+    ["sip", "lumpsum"]
+)
+
+fund_type = st.sidebar.selectbox(
+    "Preferred Fund Type",
+    ["All", "Equity", "Debt", "Gold", "Hybrid", "Others"]
+)
+
+top_n = st.sidebar.slider(
+    "Number of Recommendations",
+    3,
+    10,
+    5
+)
+
+# -------------------------------------------------
+# FETCH DATA
+# -------------------------------------------------
 
 df = fetch_amfi_data()
 
-if df is not None and not df.empty:
-    try:
-        update_nav_history(df)
-    except Exception as e:
-        st.warning("Historical storage update failed.")
-
-# =========================
-# SIDEBAR
-# =========================
-
-st.sidebar.title("Investor Preferences")
-
-risk = st.sidebar.selectbox("Risk Appetite", ["low", "medium", "high"])
-horizon = st.sidebar.selectbox("Investment Horizon", ["short", "medium", "long"])
-investment_type = st.sidebar.selectbox("Investment Type", ["sip", "lumpsum"])
-fund_type = st.sidebar.selectbox(
-    "Preferred Fund Type",
-    ["All", "Equity", "Debt", "Gold", "Hybrid"]
-)
-top_n = st.sidebar.slider("Number of Recommendations", 3, 15, 5)
-
-# =========================
-# MAIN TITLE
-# =========================
-
-st.title("📊 Agentic AI Mutual Fund Recommender")
-st.write("Live NAV powered by AMFI")
-
-# =========================
-# ERROR HANDLING
-# =========================
-
 if df is None or df.empty:
-    st.error("AMFI server busy. Please try again later.")
+
+    st.error("AMFI data not available")
+
 else:
 
-    # Optional: compute extra metrics (if still needed)
     df = compute_metrics(df)
+
+    # -------------------------------------------------
+    # RECOMMENDATION ENGINE
+    # -------------------------------------------------
 
     if st.button("Generate Recommendation"):
 
-        recommendations, profile = recommend_funds(
+        recs, profile = recommend_funds(
             df,
             risk,
             horizon,
@@ -71,105 +92,168 @@ else:
             top_n,
         )
 
-        st.markdown(f"## 🧠 Investor Profile: **{profile}**")
+        st.subheader(f"Investor Profile: {profile}")
 
-        if recommendations.empty:
-            st.warning("No funds found for selected category.")
-        else:
-
-            # =========================
-            # TABLE DISPLAY
-            # =========================
-
-            st.subheader("📈 Top Recommended Funds")
-
-            display_columns = [
-                "Scheme Name",
-                "Category",
-                "NAV",
-                "Score"
+        st.dataframe(
+            recs[
+                [
+                    "Scheme Name",
+                    "Fund Type",
+                    "1Y Return (%)",
+                    "3Y Return (%)",
+                    "5Y Return (%)",
+                    "10Y Return (%)",
+                    "Sharpe Ratio",
+                    "Volatility",
+                    "Score"
+                ]
             ]
+        )
 
-            # Add return columns only if they exist
-            for col in [
-                "1Y Return (%)",
-                "3Y Return (%)",
-                "5Y Return (%)",
-                "Annualized Return",
-                "Volatility",
-                "Sharpe Ratio"
-            ]:
-                if col in recommendations.columns:
-                    display_columns.append(col)
+        # -------------------------------------------------
+        # EXPLAINABLE AI SECTION
+        # -------------------------------------------------
 
-            st.dataframe(
-                recommendations[display_columns],
-                use_container_width=True,
+        st.markdown("## Explainable AI Insights")
+
+        for _, row in recs.iterrows():
+
+            fund_name = row["Scheme Name"]
+
+            st.markdown(f"### {fund_name}")
+
+            explanation = generate_explanation(
+                row,
+                risk,
+                horizon,
+                investment_type,
+                fund_type
             )
 
-            # =========================
-            # EXPLAINABLE AI SECTION
-            # =========================
+            st.write(explanation)
 
-            st.markdown("## 🔍 Why These Funds Were Recommended")
+            # -------------------------------------------------
+            # DOCUMENT LINKS
+            # -------------------------------------------------
 
-            for _, row in recommendations.iterrows():
+            amc = extract_amc(fund_name)
+            amc_link = get_amc_document_link(amc)
 
-                st.markdown(f"### {row['Scheme Name']}")
+            if amc_link:
+                st.markdown(f"[AMC Document Page]({amc_link})")
 
-                explanation = f"""
-                • Risk alignment matched your **{risk}** profile  
-                • Investment horizon considered: **{horizon} term**  
-                • Investment type: **{investment_type.upper()}**  
-                • Final Score: **{round(row['Score'], 3)}**
-                """
+            search_link = get_scheme_document_search_link(fund_name)
+            st.markdown(f"[Search Scheme Documents]({search_link})")
 
-                if "Sharpe Ratio" in row:
-                    explanation += f"\n• Risk-adjusted performance (Sharpe): **{round(row['Sharpe Ratio'], 3)}**"
+            scheme_code = row.get("Scheme Code")
+            amfi_link = get_amfi_scheme_link(scheme_code)
 
-                if "Volatility" in row:
-                    explanation += f"\n• Annualized Volatility: **{round(row['Volatility'], 3)}**"
+            if amfi_link:
+                st.markdown(f"[AMFI Scheme Page]({amfi_link})")
 
-                st.write(explanation)
-                st.divider()
+            st.divider()
 
-from src.sip_simulator import calculate_sip_growth, generate_sip_table
+# -------------------------------------------------
+# SIP WEALTH SIMULATOR
+# -------------------------------------------------
 
-st.markdown("## 📈 SIP Growth Simulator")
+st.header("💰 SIP Wealth Simulator")
 
-col1, col2, col3 = st.columns(3)
+sip_amount = st.number_input(
+    "Monthly SIP (₹)",
+    500,
+    100000,
+    5000
+)
 
-with col1:
-    sip_amount = st.number_input("Monthly SIP Amount (₹)", min_value=500, value=5000)
+sip_years = st.slider(
+    "Investment Years",
+    1,
+    40,
+    15
+)
 
-with col2:
-    sip_years = st.slider("Investment Duration (Years)", 1, 30, 5)
+sip_return = st.slider(
+    "Expected Return (%)",
+    1,
+    20,
+    12
+)
 
-with col3:
-    expected_return = st.slider("Expected Annual Return (%)", 1, 25, 12)
+if st.button("Simulate SIP"):
 
-if st.button("Simulate SIP Growth"):
+    r = sip_return / 100
 
-    annual_return_decimal = expected_return / 100
-
-    future_value = calculate_sip_growth(
+    fv = calculate_sip_growth(
         sip_amount,
         sip_years,
-        annual_return_decimal
+        r
     )
 
-    total_invested = sip_amount * sip_years * 12
-    wealth_gain = future_value - total_invested
+    st.success(f"Future Value: ₹{fv:,.0f}")
 
-    st.success(f"Future Value: ₹{future_value:,.0f}")
-    st.info(f"Total Invested: ₹{total_invested:,.0f}")
-    st.info(f"Wealth Gained: ₹{wealth_gain:,.0f}")
-
-    # Growth chart
     sip_df = generate_sip_table(
         sip_amount,
         sip_years,
-        annual_return_decimal
+        r
     )
 
-    st.line_chart(sip_df.set_index("Month")[["Total Invested", "Portfolio Value"]])                
+    st.line_chart(
+        sip_df.set_index("Month")["Portfolio Value"]
+    )
+
+# -------------------------------------------------
+# SWP RETIREMENT SIMULATOR
+# -------------------------------------------------
+
+st.header("📤 Retirement SWP Simulator")
+
+corpus = st.number_input(
+    "Initial Corpus (₹)",
+    100000,
+    100000000,
+    5000000
+)
+
+withdrawal = st.number_input(
+    "Monthly Withdrawal (₹)",
+    5000,
+    500000,
+    30000
+)
+
+years = st.slider(
+    "Retirement Years",
+    1,
+    40,
+    20
+)
+
+swp_return = st.slider(
+    "Return During Retirement (%)",
+    1,
+    15,
+    8
+)
+
+if st.button("Simulate SWP"):
+
+    r = swp_return / 100
+
+    remaining, balances = calculate_swp_growth(
+        corpus,
+        withdrawal,
+        years,
+        r,
+    )
+
+    st.success(f"Remaining Corpus: ₹{remaining:,.0f}")
+
+    swp_df = pd.DataFrame({
+        "Month": range(1, len(balances) + 1),
+        "Portfolio Value": balances
+    })
+
+    st.line_chart(
+        swp_df.set_index("Month")["Portfolio Value"]
+    )
