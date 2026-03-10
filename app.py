@@ -119,6 +119,7 @@ else:
         for _, row in recs.iterrows():
 
             fund_name = row["Scheme Name"]
+            print("Investment Type:", investment_type)
 
             st.markdown(f"### {fund_name}")
 
