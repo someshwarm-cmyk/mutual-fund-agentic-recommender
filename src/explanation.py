@@ -1,28 +1,18 @@
 def generate_explanation(row, risk, horizon, investment_type, fund_type):
 
-    fund_name = row["Scheme Name"]
-
-    ret_1y = row.get("1Y Return (%)", "N/A")
-    ret_3y = row.get("3Y Return (%)", "N/A")
-    sharpe = row.get("Sharpe Ratio", "N/A")
-    vol = row.get("Volatility", "N/A")
+    fund = row["Scheme Name"]
+    sharpe = row["Sharpe Ratio"]
+    volatility = row["Volatility"]
+    score = row["Score"]
 
     explanation = f"""
-{fund_name} is recommended because:
-
-• It matches your **{risk} risk appetite**.
-• Suitable for a **{horizon} investment horizon**.
-• Aligns with your **{fund_type} fund preference**.
-
-Performance indicators:
-
-• 1 Year Return: {ret_1y}%
-• 3 Year Return: {ret_3y}%
-• Sharpe Ratio: {sharpe}
-• Volatility: {vol}
-
-Higher Sharpe ratio indicates better risk-adjusted performance,
-making this fund suitable for your investment strategy.
+- **Investment Type:** {investment_type.upper()}
+- **Risk Profile:** Suitable for a {risk} risk investor
+- **Investment Horizon:** {horizon} term investment
+- **Sharpe Ratio:** {sharpe:.2f} indicating strong risk-adjusted returns
+- **Volatility:** {volatility:.2f} showing the level of risk fluctuation
+- **Overall Score:** {score:.2f} based on return, volatility, and Sharpe ratio
+- **Recommendation Reason:** This fund aligns well with the selected investment strategy and investor profile.
 """
 
     return explanation
