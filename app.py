@@ -10,6 +10,7 @@ from src.sip_simulator import (
     calculate_sip_growth,
     generate_sip_table,
     calculate_swp_growth,
+    calculate_lumpsum_growth
 )
 
 from src.document_engine import (
@@ -119,7 +120,6 @@ else:
         for _, row in recs.iterrows():
 
             fund_name = row["Scheme Name"]
-            print("Investment Type:", investment_type)
 
             st.markdown(f"### {fund_name}")
 
@@ -158,103 +158,152 @@ else:
 # SIP WEALTH SIMULATOR
 # -------------------------------------------------
 
-st.header("💰 SIP Wealth Simulator")
+if investment_type == "sip":
 
-sip_amount = st.number_input(
-    "Monthly SIP (₹)",
-    500,
-    100000,
-    5000
-)
+    st.header("💰 SIP Wealth Simulator")
 
-sip_years = st.slider(
-    "Investment Years",
-    1,
-    40,
-    15
-)
-
-sip_return = st.slider(
-    "Expected Return (%)",
-    1,
-    20,
-    12
-)
-
-if st.button("Simulate SIP"):
-
-    r = sip_return / 100
-
-    fv = calculate_sip_growth(
-        sip_amount,
-        sip_years,
-        r
+    sip_amount = st.number_input(
+        "Monthly SIP (₹)",
+        500,
+        100000,
+        5000
     )
 
-    st.success(f"Future Value: ₹{fv:,.0f}")
-
-    sip_df = generate_sip_table(
-        sip_amount,
-        sip_years,
-        r
+    sip_years = st.slider(
+        "Investment Years",
+        1,
+        40,
+        15
     )
 
-    st.line_chart(
-        sip_df.set_index("Month")["Portfolio Value"]
+    sip_return = st.slider(
+        "Expected Return (%)",
+        1,
+        20,
+        12
     )
+
+    if st.button("Simulate SIP"):
+
+        r = sip_return / 100
+
+        fv = calculate_sip_growth(
+            sip_amount,
+            sip_years,
+            r
+        )
+
+        st.success(f"Future Value: ₹{fv:,.0f}")
+
+        sip_df = generate_sip_table(
+            sip_amount,
+            sip_years,
+            r
+        )
+
+        st.line_chart(
+            sip_df.set_index("Month")["Portfolio Value"]
+        )
+
+# -------------------------------------------------
+# LUMPSUM SIMULATOR
+# -------------------------------------------------
+
+if investment_type == "lumpsum":
+
+    st.header("💵 Lumpsum Investment Simulator")
+
+    principal = st.number_input(
+        "Investment Amount (₹)",
+        10000,
+        10000000,
+        100000
+    )
+
+    years = st.slider(
+        "Investment Years",
+        1,
+        40,
+        10
+    )
+
+    return_rate = st.slider(
+        "Expected Return (%)",
+        1,
+        20,
+        12
+    )
+
+    if st.button("Simulate Lumpsum"):
+
+        r = return_rate / 100
+
+        final_value, lump_df = calculate_lumpsum_growth(
+            principal,
+            years,
+            r
+        )
+
+        st.success(f"Future Value: ₹{final_value:,.0f}")
+
+        st.line_chart(
+            lump_df.set_index("Month")["Portfolio Value"]
+        )
 
 # -------------------------------------------------
 # SWP RETIREMENT SIMULATOR
 # -------------------------------------------------
 
-st.header("📤 Retirement SWP Simulator")
+if investment_type == "swp":
 
-corpus = st.number_input(
-    "Initial Corpus (₹)",
-    100000,
-    100000000,
-    5000000
-)
+    st.header("📤 Retirement SWP Simulator")
 
-withdrawal = st.number_input(
-    "Monthly Withdrawal (₹)",
-    5000,
-    500000,
-    30000
-)
-
-years = st.slider(
-    "Retirement Years",
-    1,
-    40,
-    20
-)
-
-swp_return = st.slider(
-    "Return During Retirement (%)",
-    1,
-    15,
-    8
-)
-
-if st.button("Simulate SWP"):
-
-    r = swp_return / 100
-
-    remaining, balances = calculate_swp_growth(
-        corpus,
-        withdrawal,
-        years,
-        r,
+    corpus = st.number_input(
+        "Initial Corpus (₹)",
+        100000,
+        100000000,
+        5000000
     )
 
-    st.success(f"Remaining Corpus: ₹{remaining:,.0f}")
-
-    swp_df = pd.DataFrame({
-        "Month": range(1, len(balances) + 1),
-        "Portfolio Value": balances
-    })
-
-    st.line_chart(
-        swp_df.set_index("Month")["Portfolio Value"]
+    withdrawal = st.number_input(
+        "Monthly Withdrawal (₹)",
+        5000,
+        500000,
+        30000
     )
+
+    years = st.slider(
+        "Retirement Years",
+        1,
+        40,
+        20
+    )
+
+    swp_return = st.slider(
+        "Return During Retirement (%)",
+        1,
+        15,
+        8
+    )
+
+    if st.button("Simulate SWP"):
+
+        r = swp_return / 100
+
+        remaining, balances = calculate_swp_growth(
+            corpus,
+            withdrawal,
+            years,
+            r,
+        )
+
+        st.success(f"Remaining Corpus: ₹{remaining:,.0f}")
+
+        swp_df = pd.DataFrame({
+            "Month": range(1, len(balances) + 1),
+            "Portfolio Value": balances
+        })
+
+        st.line_chart(
+            swp_df.set_index("Month")["Portfolio Value"]
+        )
