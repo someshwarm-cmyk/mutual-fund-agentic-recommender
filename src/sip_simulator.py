@@ -1,10 +1,7 @@
 import pandas as pd
 
 
-# -------------------------------------------------
-# SIP GROWTH CALCULATION
-# -------------------------------------------------
-
+# SIP FUTURE VALUE
 def calculate_sip_growth(sip_amount, years, annual_return):
 
     months = years * 12
@@ -12,16 +9,13 @@ def calculate_sip_growth(sip_amount, years, annual_return):
 
     value = 0
 
-    for i in range(months):
+    for _ in range(months):
         value = (value + sip_amount) * (1 + monthly_rate)
 
     return value
 
 
-# -------------------------------------------------
 # SIP TABLE FOR GRAPH
-# -------------------------------------------------
-
 def generate_sip_table(sip_amount, years, annual_return):
 
     months = years * 12
@@ -42,10 +36,7 @@ def generate_sip_table(sip_amount, years, annual_return):
     return pd.DataFrame(data)
 
 
-# -------------------------------------------------
 # SWP CALCULATION
-# -------------------------------------------------
-
 def calculate_swp_growth(initial_corpus, withdrawal, years, annual_return):
 
     months = years * 12
@@ -54,7 +45,7 @@ def calculate_swp_growth(initial_corpus, withdrawal, years, annual_return):
     corpus = initial_corpus
     balances = []
 
-    for m in range(months):
+    for _ in range(months):
 
         corpus = corpus * (1 + monthly_rate)
         corpus -= withdrawal
@@ -67,10 +58,7 @@ def calculate_swp_growth(initial_corpus, withdrawal, years, annual_return):
     return corpus, balances
 
 
-# -------------------------------------------------
-# LUMPSUM CALCULATION
-# -------------------------------------------------
-
+# LUMPSUM GROWTH
 def calculate_lumpsum_growth(principal, years, annual_return):
 
     months = years * 12
