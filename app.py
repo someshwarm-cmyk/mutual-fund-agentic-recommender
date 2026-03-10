@@ -48,7 +48,7 @@ horizon = st.sidebar.selectbox(
 
 investment_type = st.sidebar.selectbox(
     "Investment Type",
-    ["sip", "lumpsum"]
+    ["sip", "lumpsum", "swp"]
 )
 
 fund_type = st.sidebar.selectbox(
